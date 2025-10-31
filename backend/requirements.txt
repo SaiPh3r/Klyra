@@ -1,0 +1,59 @@
+# -----------------------------
+# ⚙️ Core Framework
+# -----------------------------
+fastapi
+uvicorn
+pydantic
+python-multipart
+
+# -----------------------------
+# 🧠 LangChain Ecosystem
+# -----------------------------
+langchain
+langchain-core
+langchain-openai
+langchain-anthropic
+langchain-google-genai
+langchain-huggingface
+
+# -----------------------------
+# 🤖 AI / LLM Integrations
+# -----------------------------
+openai
+google-generativeai
+transformers
+huggingface-hub
+
+# -----------------------------
+# 📊 Data & Machine Learning
+# -----------------------------
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+
+# -----------------------------
+# 🔎 RAG + Vector Databases
+# -----------------------------
+faiss-cpu
+tiktoken
+
+# -----------------------------
+# 🧩 Utility / Environment
+# -----------------------------
+python-dotenv
+requests
+
+
+
+# -----------------------------
+# 🧾 PDF / Excel / File Handling
+# -----------------------------
+PyPDF2
+openpyxl
+
+# -----------------------------
+# 🧰 CORS + Middleware
+# -----------------------------
+fastapi-cors
