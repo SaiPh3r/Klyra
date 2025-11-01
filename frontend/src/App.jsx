@@ -7,7 +7,7 @@ export default function App() {
 
   useEffect(() => {
     if (isSignedIn && user) {
-      fetch("http://localhost:8000/signup", {
+      fetch("https://klyra-e6ui.onrender.com/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

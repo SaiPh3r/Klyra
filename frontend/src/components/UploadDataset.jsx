@@ -15,7 +15,7 @@ function UploadDataset({ userId }) {
       const fileUrl = await uploadCSV(file, userId);
 
       // 2) SAVE DATASET RECORD IN MONGO VIA FASTAPI
-      const res = await fetch("http://localhost:8000/dataset/add", {
+      const res = await fetch("https://klyra-e6ui.onrender.com/dataset/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
