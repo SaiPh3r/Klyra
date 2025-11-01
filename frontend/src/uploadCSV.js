@@ -4,7 +4,7 @@ export async function uploadCSV(file, userId) {
   const filePath = `datasets/${userId}/${Date.now()}-${file.name}`;
 
   const { data, error } = await supabase.storage
-    .from("klyra")      // your bucket name
+    .from("klyra")      //  bucket name
     .upload(filePath, file);
 
   if (error) {

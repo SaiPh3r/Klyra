@@ -27,11 +27,11 @@ function UploadDataset({ userId }) {
 
       const data = await res.json();
       console.log("dataset added:", data);
-      alert("Uploaded Successfully ✅");
+      alert("Uploaded Successfully ");
       
     } catch (err) {
       console.log(err);
-      alert("Upload failed ❌");
+      alert("Upload failed ");
     }
 
     setLoading(false);
