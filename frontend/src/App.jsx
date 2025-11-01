@@ -1,10 +1,10 @@
 import { SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 import { useEffect } from "react";
+import UploadDataset from "./components/UploadDataset";   //  IMPORT THIS
 
 export default function App() {
   const { user, isSignedIn } = useUser();
 
-  // 🔹 Handle new/existing users
   useEffect(() => {
     if (isSignedIn && user) {
       fetch("http://localhost:8000/signup", {
@@ -19,7 +19,6 @@ export default function App() {
     }
   }, [isSignedIn, user]);
 
-  //  If not signed in → show sign in button
   if (!isSignedIn) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
@@ -33,7 +32,6 @@ export default function App() {
     );
   }
 
-  //  If signed in → show dashboard
   return (
     <div className="dashboard p-6">
       <header className="flex justify-between items-center mb-6">
@@ -42,7 +40,14 @@ export default function App() {
       </header>
 
       <p className="text-lg">Welcome back, {user.firstName} </p>
-      <p className="text-gray-600 mt-2">Your email: {user.primaryEmailAddress.emailAddress}</p>
+      <p className="text-gray-600 mt-2">
+        Your email: {user.primaryEmailAddress.emailAddress}
+      </p>
+
+      {/* add your upload component here  */}
+      <div className="mt-8">
+        <UploadDataset userId={user.id} />
+      </div>
     </div>
   );
 }

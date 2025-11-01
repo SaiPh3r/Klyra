@@ -18,6 +18,7 @@ app.add_middleware(
 # MongoDB setup
 db = client[os.getenv("DB_NAME", "klyra_db")]
 users_collection = db["users"]
+datasets_collection = db["datasets"]
 
 class User(BaseModel):
     user_id : str
@@ -25,7 +26,6 @@ class User(BaseModel):
     email: str
 
 class Dataset(BaseModel):
-    dataset_id : str
     user_id : str
     file_name : str
     file_url : str #url for the file where i will be stroing it (firebase abhi ke liye socha h)
@@ -55,5 +55,22 @@ def handle_signup(user:User):
             }
         except:
             raise HTTPException(status_code=500 , detail="error in creating user")
+        
+@app.post("/dataset/add")
+def add_dataset(dataset: Dataset):
+    new_data = {
+        "user_id": dataset.user_id,
+        "file_name": dataset.file_name,
+        "file_url": dataset.file_url,
+        "created_at": datetime.now(UTC)
+    }
+    
+    try:
+        result = datasets_collection.insert_one(new_data)
+        new_data["_id"] = str(result.inserted_id)  # <<< FIX
+
+        return {"message": "Dataset saved successfully", "data": new_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
 
