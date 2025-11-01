@@ -1,6 +1,7 @@
 # -----------------------------
 # ⚙️ Core Framework
 # -----------------------------
+pymongo[srv]==4.7.3
 fastapi
 uvicorn
 pydantic
