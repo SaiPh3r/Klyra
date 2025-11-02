@@ -7,12 +7,12 @@ from pydantic import BaseModel
 import os
 from datetime import datetime , UTC
 from bson.objectid import ObjectId
-import pandas as pd
 import requests
 from io import StringIO
 from dotenv import load_dotenv
 load_dotenv()
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+import csv
 
 
 app = FastAPI()
@@ -168,10 +168,11 @@ def process_dataset(dataset_id:str):
     except:
         raise HTTPException(status_code=500, detail="failed to fetch CSV")
     
-    df = pd.read_csv(StringIO(csv_resp.text))
+    data_lines = csv_resp.text.splitlines()
+    reader = csv.reader(data_lines)
+    row_texts = [" | ".join(row) for row in reader]
 
     # row wise text chunks
-    row_texts = df.astype(str).apply(lambda row: " | ".join(row.values), axis=1).tolist()
     embeddings = model.embed_documents(row_texts)
 
     # build row objects

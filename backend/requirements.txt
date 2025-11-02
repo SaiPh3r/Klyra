@@ -4,11 +4,7 @@ pydantic
 pymongo[srv]==4.7.3
 python-dotenv
 requests
-
 langchain==0.2.11
 langchain-core==0.2.11
 langchain-community==0.2.11
 langchain-google-genai==3.0.0
-
-pandas==2.2.2
-numpy==1.26.4
