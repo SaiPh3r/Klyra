@@ -5,8 +5,10 @@ pymongo[srv]==4.7.3
 python-dotenv
 requests
 
-langchain>=0.2.11
-langchain-google-genai>=0.2.0
+# LLM
+langchain==0.2.12
+langchain-google-genai==0.2.0
 
+# pandas + numpy wheels available
 pandas==2.0.3
 numpy==1.23.5
