@@ -1,14 +1,11 @@
-from pyexpat import model
 from fastapi import FastAPI , HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from openai import embeddings
 from db import client
 from pydantic import BaseModel
 import os
 from datetime import datetime , UTC
 from bson.objectid import ObjectId
 import requests
-from io import StringIO
 from dotenv import load_dotenv
 load_dotenv()
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
