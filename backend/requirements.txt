@@ -1,63 +1,12 @@
-# -----------------------------
-# ⚙️ Core Framework
-# -----------------------------
-pymongo[srv]==4.7.3
 fastapi
 uvicorn
 pydantic
-python-multipart
-
-# -----------------------------
-# 🧠 LangChain Ecosystem
-# -----------------------------
-langchain>=0.2.11
-langchain-core>=0.2.11
-langchain-community>=0.2.11
-langchain-google-genai>=0.2.0
-langchain-openai
-langchain-anthropic
-langchain-huggingface
-
-# -----------------------------
-# 🤖 AI / LLM Integrations
-# -----------------------------
-openai
-google-generativeai
-transformers
-huggingface-hub
-
-# -----------------------------
-# 📊 Data & Machine Learning
-# -----------------------------
-pandas
-numpy
-scikit-learn
-matplotlib
-seaborn
-
-
-
-# -----------------------------
-# 🔎 RAG + Vector Databases
-# -----------------------------
-faiss-cpu
-tiktoken
-
-# -----------------------------
-# 🧩 Utility / Environment
-# -----------------------------
+pymongo[srv]==4.7.3
 python-dotenv
 requests
 
+langchain>=0.2.11
+langchain-google-genai>=0.2.0
 
-
-# -----------------------------
-# 🧾 PDF / Excel / File Handling
-# -----------------------------
-PyPDF2
-openpyxl
-
-# -----------------------------
-# 🧰 CORS + Middleware
-# -----------------------------
-fastapi-cors
+pandas==2.0.3
+numpy==1.23.5
