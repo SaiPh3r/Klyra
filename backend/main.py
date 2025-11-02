@@ -4,6 +4,7 @@ from db import client
 from pydantic import BaseModel
 import os
 from datetime import datetime , UTC
+from bson.objectid import ObjectId
 
 
 app = FastAPI()
@@ -19,6 +20,7 @@ app.add_middleware(
 db = client[os.getenv("DB_NAME", "klyra_db")]
 users_collection = db["users"]
 datasets_collection = db["datasets"]
+chat_collection = db["chats"]
 
 class User(BaseModel):
     user_id : str
@@ -67,9 +69,25 @@ def add_dataset(dataset: Dataset):
     
     try:
         result = datasets_collection.insert_one(new_data)
-        new_data["_id"] = str(result.inserted_id)  # <<< FIX
+        new_data["_id"] = str(result.inserted_id)  
+
+        chat_collection.insert_one({
+            "user_id":dataset.user_id,
+            "dataset_id":str(result.inserted_id),
+            "messages":[],
+        })
 
         return {"message": "Dataset saved successfully", "data": new_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/datasets/{user_id}")
+def get_datasets(user_id:str):
+    try:
+        datasets = list(datasets_collection.find({"user_id":user_id}))
+        for d in datasets:
+            d["_id"] = str(d["_id"])
+        return  {"datasets":datasets}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
