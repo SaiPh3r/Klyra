@@ -167,7 +167,14 @@ def process_dataset(dataset_id:str):
     
     data_lines = csv_resp.text.splitlines()
     reader = csv.reader(data_lines)
-    row_texts = [" | ".join(row) for row in reader]
+    rows = list(reader)
+
+    if len(rows) <= 1:
+        raise HTTPException(status_code=400, detail="CSV is empty or has no rows")
+
+    # drop header
+    rows = rows[1:]
+    row_texts = [" | ".join(r) for r in rows]
 
     # row wise text chunks
     embeddings = model.embed_documents(row_texts)
