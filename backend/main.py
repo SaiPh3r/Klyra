@@ -11,7 +11,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or ["*"] for all origins (less secure)
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -126,7 +126,7 @@ def send_message(data:SendMessage):
         
         ai_msg = {
             "sender": "ai",
-            "message": "Thanks! I'm processing your dataset... AI analysis coming soon 🚀",
+            "message": "Thanks! I'm processing your dataset... AI analysis coming soon ",
             "timestamp": datetime.now(UTC)
         }
 
@@ -134,8 +134,6 @@ def send_message(data:SendMessage):
             {"dataset_id": data.dataset_id},
             {"$push": {"messages": ai_msg}}
         )
-
-
 
         return {"message": "message added", "user_msg": msg , "ai_msg":ai_msg}
 
