@@ -123,8 +123,21 @@ def send_message(data:SendMessage):
 
         if result.modified_count == 0:
             raise HTTPException(status_code=404, detail="chat not found")
+        
+        ai_msg = {
+            "sender": "ai",
+            "message": "Thanks! I'm processing your dataset... AI analysis coming soon 🚀",
+            "timestamp": datetime.now(UTC)
+        }
 
-        return {"message": "message added", "data": msg}
+        chat_collection.update_one(
+            {"dataset_id": data.dataset_id},
+            {"$push": {"messages": ai_msg}}
+        )
+
+
+
+        return {"message": "message added", "user_msg": msg , "ai_msg":ai_msg}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
