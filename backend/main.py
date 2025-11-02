@@ -5,7 +5,10 @@ from pydantic import BaseModel
 import os
 from datetime import datetime , UTC
 from bson.objectid import ObjectId
-
+from sentence_transformers import SentenceTransformer
+import pandas as pd
+import requests
+from io import StringIO
 
 app = FastAPI()
 
@@ -16,11 +19,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+
 # MongoDB setup
 db = client[os.getenv("DB_NAME", "klyra_db")]
 users_collection = db["users"]
 datasets_collection = db["datasets"]
 chat_collection = db["chats"]
+embeddings_collection = db["embeddings"]
 
 class User(BaseModel):
     user_id : str
@@ -132,13 +139,50 @@ def send_message(data:SendMessage):
 
         chat_collection.update_one(
             {"dataset_id": data.dataset_id},
-            {"$push": {"messages": ai_msg}}
+            {"$push": {"messages": ai_msg}} 
         )
 
         return {"message": "message added", "user_msg": msg , "ai_msg":ai_msg}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.post("/dataset/process/{dataset_id}")
+def process_dataset(dataset_id:str):
+    ds = datasets_collection.find_one({"_id": ObjectId(dataset_id)})
+    if not ds:
+        raise HTTPException(status_code=404, detail="dataset not found")
+    
+    file_url = ds["file_url"]
+
+    try:
+        csv_resp = requests.get(file_url)
+        csv_resp.raise_for_status()
+    
+    except:
+        raise HTTPException(status_code=500, detail="failed to fetch CSV")
+    
+    df = pd.read_csv(StringIO(csv_resp.text))
+
+    # row wise text chunks
+    row_texts = df.astype(str).apply(lambda row: " | ".join(row.values), axis=1).tolist()
+    # embeddings
+    embeddings = model.encode(row_texts).tolist() 
+    # store in mongodb
+    chunk_docs = [
+        {"text": row_texts[i], "embedding": embeddings[i]}
+        for i in range(len(row_texts))
+    ]
+
+    embeddings_collection.insert_one({
+        "dataset_id": dataset_id,
+        "chunks": chunk_docs
+    })
+
+    return {"message": "embeddings created", "rows": len(chunk_docs)}
+
+
     
 
 

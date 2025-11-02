@@ -33,6 +33,8 @@ numpy
 scikit-learn
 matplotlib
 seaborn
+sentence-transformers
+
 
 # -----------------------------
 # 🔎 RAG + Vector Databases
