@@ -1,14 +1,19 @@
+from pyexpat import model
 from fastapi import FastAPI , HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from openai import embeddings
 from db import client
 from pydantic import BaseModel
 import os
 from datetime import datetime , UTC
 from bson.objectid import ObjectId
-from sentence_transformers import SentenceTransformer
 import pandas as pd
 import requests
 from io import StringIO
+from dotenv import load_dotenv
+load_dotenv()
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
 
 app = FastAPI()
 
@@ -149,7 +154,7 @@ def send_message(data:SendMessage):
 
 @app.post("/dataset/process/{dataset_id}")
 def process_dataset(dataset_id:str):
-    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    model = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", api_key=os.getenv("GOOGLE_API_KEY"))
     ds = datasets_collection.find_one({"_id": ObjectId(dataset_id)})
     if not ds:
         raise HTTPException(status_code=404, detail="dataset not found")
@@ -167,20 +172,29 @@ def process_dataset(dataset_id:str):
 
     # row wise text chunks
     row_texts = df.astype(str).apply(lambda row: " | ".join(row.values), axis=1).tolist()
-    # embeddings
-    embeddings = model.encode(row_texts).tolist() 
-    # store in mongodb
+    embeddings = model.embed_documents(row_texts)
+
+    # build row objects
     chunk_docs = [
-        {"text": row_texts[i], "embedding": embeddings[i]}
+        {"dataset_id": dataset_id, "text": row_texts[i], "embedding": embeddings[i]}
         for i in range(len(row_texts))
     ]
 
-    embeddings_collection.insert_one({
-        "dataset_id": dataset_id,
-        "chunks": chunk_docs
-    })
+    # delete old chunks if any
+    embeddings_collection.delete_many({"dataset_id": dataset_id})
+
+    # insert many separate docs
+    embeddings_collection.insert_many(chunk_docs)
+
 
     return {"message": "embeddings created", "rows": len(chunk_docs)}
+
+@app.get("/debug/count/{dataset_id}")
+def debug_count(dataset_id: str):
+    count = embeddings_collection.count_documents({"dataset_id": dataset_id})
+    return {"dataset_id": dataset_id, "count": count}
+
+
 
 
     

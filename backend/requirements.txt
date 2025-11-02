@@ -10,11 +10,12 @@ python-multipart
 # -----------------------------
 # 🧠 LangChain Ecosystem
 # -----------------------------
-langchain
-langchain-core
+langchain>=0.2.11
+langchain-core>=0.2.11
+langchain-community>=0.2.11
+langchain-google-genai>=0.2.0
 langchain-openai
 langchain-anthropic
-langchain-google-genai
 langchain-huggingface
 
 # -----------------------------
@@ -33,7 +34,7 @@ numpy
 scikit-learn
 matplotlib
 seaborn
-sentence-transformers
+
 
 
 # -----------------------------
