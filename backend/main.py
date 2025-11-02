@@ -91,4 +91,16 @@ def get_datasets(user_id:str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@app.get("/chat/{dataset_id}")
+def get_chat(dataset_id:str):
+    try:
+        chat = chat_collection.find_one({"dataset_id":dataset_id})
+        if not chat:
+            raise HTTPException(status_code=404, detail="chat not found")
+        
+        chat["_id"] = str(chat["_id"])
+        return {"chat":chat}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
