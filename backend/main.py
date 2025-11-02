@@ -38,7 +38,11 @@ class Chat(BaseModel):
     sender: str           # "user" or "ai"
     message: str
     timestamp: datetime = datetime.now(UTC)
-    
+
+class SendMessage(BaseModel):
+    dataset_id:str
+    sender:str
+    message:str    
 
 @app.get("/")
 def home():
@@ -103,4 +107,27 @@ def get_chat(dataset_id:str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@app.post("/chat/send")
+def send_message(data:SendMessage):
+    try:
+        msg ={
+            "sender":data.sender,
+            "message":data.message,
+            "timestamp":datetime.now(UTC)
+        }
+
+        result = chat_collection.update_one(
+            {"dataset_id": data.dataset_id},
+            {"$push": {"messages": msg}}
+        )
+
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="chat not found")
+
+        return {"message": "message added", "data": msg}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
 
