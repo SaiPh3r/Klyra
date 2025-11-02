@@ -20,7 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 # MongoDB setup
 db = client[os.getenv("DB_NAME", "klyra_db")]
@@ -37,7 +36,7 @@ class User(BaseModel):
 class Dataset(BaseModel):
     user_id : str
     file_name : str
-    file_url : str #url for the file where i will be stroing it (firebase abhi ke liye socha h)
+    file_url : str #url for the file where i will be stroing it 
 
 class Chat(BaseModel):
     user_id: str
@@ -150,6 +149,7 @@ def send_message(data:SendMessage):
 
 @app.post("/dataset/process/{dataset_id}")
 def process_dataset(dataset_id:str):
+    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
     ds = datasets_collection.find_one({"_id": ObjectId(dataset_id)})
     if not ds:
         raise HTTPException(status_code=404, detail="dataset not found")
