@@ -151,7 +151,7 @@ def send_message(data:SendMessage):
 
 @app.post("/dataset/process/{dataset_id}")
 def process_dataset(dataset_id:str):
-    model = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", api_key=os.getenv("GOOGLE_API_KEY"))
+    model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", api_key=os.getenv("GOOGLE_API_KEY"))
     ds = datasets_collection.find_one({"_id": ObjectId(dataset_id)})
     if not ds:
         raise HTTPException(status_code=404, detail="dataset not found")
