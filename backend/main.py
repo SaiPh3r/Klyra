@@ -56,6 +56,20 @@ class SendMessage(BaseModel):
 def home():
     return {"message":"welcome to Klyra : "}
 
+import threading
+import time
+import requests
+
+def keep_alive():
+    while True:
+        try:
+            requests.get("https://klyra-e6ui.onrender.com/")
+        except:
+            pass
+        time.sleep(300)  # ping every 5 minutes
+
+threading.Thread(target=keep_alive, daemon=True).start()
+
 @app.post("/signup")
 def handle_signup(user:User):
     existing_user = users_collection.find_one({"user_id": user.user_id})
@@ -198,6 +212,8 @@ def process_dataset(dataset_id:str):
 def debug_count(dataset_id: str):
     count = embeddings_collection.count_documents({"dataset_id": dataset_id})
     return {"dataset_id": dataset_id, "count": count}
+
+
 
 
 
