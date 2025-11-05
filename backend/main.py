@@ -8,7 +8,9 @@ from bson.objectid import ObjectId
 import requests
 from dotenv import load_dotenv
 load_dotenv()
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings , ChatGoogleGenerativeAI
+from langchain_core.prompts import PromptTemplate
+
 import csv
 
 
@@ -50,25 +52,16 @@ class Chat(BaseModel):
 class SendMessage(BaseModel):
     dataset_id:str
     sender:str
-    message:str    
+    message:str 
+
+class Ask(BaseModel):
+       dataset_id:str
+       question:str
 
 @app.get("/")
 def home():
     return {"message":"welcome to Klyra : "}
 
-import threading
-import time
-import requests
-
-def keep_alive():
-    while True:
-        try:
-            requests.get("https://klyra-e6ui.onrender.com/")
-        except:
-            pass
-        time.sleep(300)  # ping every 5 minutes
-
-threading.Thread(target=keep_alive, daemon=True).start()
 
 @app.post("/signup")
 def handle_signup(user:User):
@@ -146,18 +139,9 @@ def send_message(data:SendMessage):
         if result.modified_count == 0:
             raise HTTPException(status_code=404, detail="chat not found")
         
-        ai_msg = {
-            "sender": "ai",
-            "message": "Thanks! I'm processing your dataset... AI analysis coming soon ",
-            "timestamp": datetime.now(UTC)
-        }
 
-        chat_collection.update_one(
-            {"dataset_id": data.dataset_id},
-            {"$push": {"messages": ai_msg}} 
-        )
 
-        return {"message": "message added", "user_msg": msg , "ai_msg":ai_msg}
+        return {"message": "message added", "user_msg": msg }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -187,8 +171,12 @@ def process_dataset(dataset_id:str):
         raise HTTPException(status_code=400, detail="CSV is empty or has no rows")
 
     # drop header
+    header = rows[0] 
     rows = rows[1:]
-    row_texts = [" | ".join(r) for r in rows]
+    row_texts = [
+    " | ".join([f"{header[i]}={r[i]}" for i in range(len(r))])
+    for r in rows
+]
 
     # row wise text chunks
     embeddings = model.embed_documents(row_texts)
@@ -213,11 +201,83 @@ def debug_count(dataset_id: str):
     count = embeddings_collection.count_documents({"dataset_id": dataset_id})
     return {"dataset_id": dataset_id, "count": count}
 
+@app.get("/debug/one/{dataset_id}")
+def debug_one(dataset_id: str):
+    doc = embeddings_collection.find_one({"dataset_id": dataset_id})
+    if not doc:
+        return {"msg":"no"}
+    return {"len": len(doc["embedding"])}
 
 
+def cosine(a, b):
+    dot = sum(x*y for x,y in zip(a,b))
+    normA = (sum(x*x for x in a)) ** 0.5
+    normB = (sum(x*x for x in b)) ** 0.5
+    return dot / (normA * normB)
 
+@app.post("/chat/answer")
+def answer(data:Ask):
+    # 1) embed question
+    model = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", api_key=os.getenv("GOOGLE_API_KEY"))
+    q_emb = model.embed_documents([data.question])[0]
 
+    # 2) find dataset chunks & score
+    chunks = embeddings_collection.find({"dataset_id": data.dataset_id})
+    scored = []
+    for c in chunks:
+        emb = [float(x) for x in c["embedding"]]
+        score = cosine(q_emb, emb)
+        scored.append((score, c["text"]))
 
-    
+    scored.sort(reverse=True)
+    top3 = [s[1] for s in scored[:3]]
+    context = "\n".join(top3)
 
+    # 3) get ALL chat history
+    chat_doc = chat_collection.find_one({"dataset_id": data.dataset_id})
+    history = ""
+    if chat_doc and "messages" in chat_doc:
+        history = "\n".join([f"{m['sender']}: {m['message']}" for m in chat_doc["messages"]])
 
+    # 4) build prompt
+    template = """You are a data analysis assistant.
+
+Use ONLY the dataset rows and chat history below.
+
+CHAT HISTORY:
+{history}
+
+DATA ROWS:
+{context}
+
+QUESTION:
+{question}
+
+Rules:
+- your answer MUST come strictly from dataset rows
+- chat history is ONLY to understand the user's intent, NOT to invent data
+- do NOT use any knowledge outside dataset rows
+- if not enough dataset info -> say EXACTLY: "Not enough information in the dataset."
+
+Give a short precise answer:"""
+
+    prompt = PromptTemplate.from_template(template)
+    llm = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash", api_key=os.getenv("GOOGLE_API_KEY"))
+
+    final_prompt = prompt.format(context=context, question=data.question, history=history)
+    resp = llm.invoke(final_prompt)
+    answer_text = resp.content
+
+    # 5) SAVE AI reply back into chat DB
+    ai_msg = {
+        "sender": "ai",
+        "message": answer_text,
+        "timestamp": datetime.now(UTC)
+    }
+
+    chat_collection.update_one(
+        {"dataset_id": data.dataset_id},
+        {"$push": {"messages": ai_msg}}
+    )
+
+    return {"answer": answer_text}
