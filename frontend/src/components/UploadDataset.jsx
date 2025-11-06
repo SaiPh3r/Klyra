@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { uploadCSV } from "../uploadCSV";
 
-function UploadDataset({ userId }) {
+function UploadDataset({ userId, afterUpload }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -11,10 +11,10 @@ function UploadDataset({ userId }) {
     setLoading(true);
 
     try {
-      // 1) UPLOAD FILE TO SUPABASE
+      // 1) upload to Supabase
       const fileUrl = await uploadCSV(file, userId);
 
-      // 2) SAVE DATASET RECORD IN MONGO VIA FASTAPI
+      // 2) make dataset in DB
       const res = await fetch("https://klyra-e6ui.onrender.com/dataset/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -27,8 +27,18 @@ function UploadDataset({ userId }) {
 
       const data = await res.json();
       console.log("dataset added:", data);
-      alert("Uploaded Successfully ");
-      
+
+      // 3) process embeddings
+      await fetch(
+        `https://klyra-e6ui.onrender.com/dataset/process/${data.data._id}`,
+        { method: "POST" }
+      );
+
+      alert("Uploaded & processed successfully ");
+
+      // reload list
+      if (afterUpload) afterUpload();
+
     } catch (err) {
       console.log(err);
       alert("Upload failed ");

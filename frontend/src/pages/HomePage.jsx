@@ -1,6 +1,5 @@
 import { SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
 
 export default function HomePage() {
   const { user, isSignedIn } = useUser();
@@ -24,23 +23,23 @@ export default function HomePage() {
  return (
   <div className="min-h-screen bg-[#070708] text-white">
 
-    {/* NAVBAR */}
+
     <nav className="fixed top-0 left-0 w-full z-50 bg-black/40 backdrop-blur-xl border-b border-white/10">
       <div className="max-w-6xl mx-auto flex justify-between items-center px-4 py-4">
 
-        {/* LEFT */}
+     
         <div className="w-1/3">
           <h1 className="text-xl font-bold tracking-wide">Klyra</h1>
         </div>
 
-        {/* CENTER */}
+      
         <div className="hidden md:flex justify-center w-1/3 gap-8 text-sm">
           <a href="#features" className="text-gray-300">Features</a>
           <a href="#pricing" className="text-gray-300">Pricing</a>
           <a href="#about" className="text-gray-300">About</a>
         </div>
 
-        {/* RIGHT */}
+       
         <div className="w-1/3 flex justify-end">
           <SignInButton mode="modal">
             <button className="px-4 py-2 bg-purple-600 rounded-lg text-white font-medium">
@@ -51,8 +50,6 @@ export default function HomePage() {
       </div>
     </nav>
 
-
-    {/* HERO */}
     <section className="pt-40 md:pt-48 pb-32 text-center px-6">
       <h2 className="text-4xl md:text-6xl font-extrabold leading-tight">
         Transform Your <span className="text-purple-400">Data</span> Into
@@ -71,7 +68,6 @@ export default function HomePage() {
     </section>
 
 
-    {/* FEATURES */}
     <section id="features" className="pt-20 pb-32 px-6 md:px-10">
       <h2 className="text-3xl font-bold text-center">Powerful Features</h2>
       <p className="text-center text-gray-400 mt-2">
@@ -97,7 +93,6 @@ export default function HomePage() {
     </section>
 
 
-    {/* PRICING */}
     <section id="pricing" className="pt-32 pb-32 px-6 md:px-10">
       <h2 className="text-3xl font-bold text-center">Pricing Plans</h2>
       <p className="text-center text-gray-400 mt-2">USD / month</p>
@@ -144,7 +139,6 @@ export default function HomePage() {
     </section>
 
 
-    {/* ABOUT */}
     <section id="about" className="pt-28 pb-32 px-6 md:px-10 max-w-4xl mx-auto text-center">
       <h2 className="text-3xl font-bold mb-6">About Klyra</h2>
       <p className="text-gray-400 text-lg leading-[1.6]">
@@ -154,28 +148,10 @@ export default function HomePage() {
     </section>
 
 
-    {/* FOOTER */}
     <footer className="border-t border-white/10 py-6 text-center text-gray-400 text-sm">
       Made by Sai — <a className="text-purple-400 underline" href="https://github.com/SaiPh3r/Klyra" target="_blank">GitHub Repo</a>
     </footer>
 
   </div>
 ); }
- return (
-    <div className="p-6">
-      <header className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold">Klyra Dashboard</h1>
-        <UserButton />
-      </header>
-
-      <p>Welcome back, {user.firstName} </p>
-
-      <Link
-        to="/upload"
-        className="mt-6 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg"
-      >
-        Upload Dataset
-      </Link>
-    </div>
-  );
 }
