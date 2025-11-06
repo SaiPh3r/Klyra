@@ -28,6 +28,7 @@ function UploadDataset({ userId, afterUpload }) {
         method: "POST"
       });
 
+      console.log("data added succesfuly" , data)
       alert("Uploaded & processed successfully");
 
       if (afterUpload) afterUpload();
