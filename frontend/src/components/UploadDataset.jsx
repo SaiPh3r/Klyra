@@ -11,10 +11,8 @@ function UploadDataset({ userId, afterUpload }) {
     setLoading(true);
 
     try {
-      // 1) upload to Supabase
       const fileUrl = await uploadCSV(file, userId);
 
-      // 2) make dataset in DB
       const res = await fetch("https://klyra-e6ui.onrender.com/dataset/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -26,37 +24,57 @@ function UploadDataset({ userId, afterUpload }) {
       });
 
       const data = await res.json();
-      console.log("dataset added:", data);
+      await fetch(`https://klyra-e6ui.onrender.com/dataset/process/${data.data._id}`, {
+        method: "POST"
+      });
 
-      // 3) process embeddings
-      await fetch(
-        `https://klyra-e6ui.onrender.com/dataset/process/${data.data._id}`,
-        { method: "POST" }
-      );
+      alert("Uploaded & processed successfully");
 
-      alert("Uploaded & processed successfully ");
-
-      // reload list
       if (afterUpload) afterUpload();
 
     } catch (err) {
-      console.log(err);
-      alert("Upload failed ");
+      alert("Upload failed");
     }
 
     setLoading(false);
   }
 
   return (
-    <div>
+    <div className="flex flex-col items-center gap-4 w-full">
+
       <input
         type="file"
+        id="csvInput"
         accept=".csv"
         onChange={(e) => setFile(e.target.files[0])}
+        className="hidden"
       />
-      <button onClick={handleUpload} disabled={loading}>
-        {loading ? "Uploading..." : "Upload Dataset"}
-      </button>
+
+      <label
+        htmlFor="csvInput"
+        className="
+          w-full max-w-md text-center px-6 py-3
+          bg-purple-600 hover:bg-purple-700
+          cursor-pointer rounded-xl text-white font-medium transition
+        "
+      >
+        Click here to choose your CSV
+      </label>
+
+      {file && (
+        <button
+          onClick={handleUpload}
+          disabled={loading}
+          className="
+            w-full max-w-md text-center px-6 py-3
+            bg-gray-900 border border-white/20
+            rounded-xl text-white disabled:opacity-40
+          "
+        >
+          {loading ? "Uploading..." : "Upload Dataset"}
+        </button>
+      )}
+
     </div>
   );
 }
