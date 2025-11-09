@@ -1,40 +1,51 @@
 import { useParams } from "react-router-dom"
 import { useEffect , useState } from "react"
+
 const ChatPage = () => {
-    const {datasetId} = useParams();
-    console.log(datasetId);
-    const[messages , setMessages] = useState([]);
-    const[question , setQuestion] = useState("");
+  const { datasetId } = useParams();
+  const [messages , setMessages] = useState([]);
+  const [question , setQuestion] = useState("");
 
-    async function loadChat() {
-        const res = await fetch(`https://klyra-e6ui.onrender.com/chat/${datasetId}`);
-        const data = await res.json();
-        console.log("chat loaded",data);
+  async function loadChat() {
+    const res = await fetch(`https://klyra-e6ui.onrender.com/chat/${datasetId}`);
+    const data = await res.json();
+    console.log("chat loaded", data);
 
-        setMessages(data.chat.messages ?? []);
-    }
-    
-    async function askQuestion() {
-        const res = await fetch('https://klyra-e6ui.onrender.com/chat/answer',{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({
-                dataset_id:datasetId,
-                question:question,
-            })
-        });
-        const data = await res.json();
-        console.log(data);
-        // console.log("AI replied" , data)
+    setMessages(data.chat.messages ?? []);
+  }
 
-        setQuestion("");
-        loadChat();
-    }
+  async function askQuestion() {
+    // store user msg first
+    await fetch(`https://klyra-e6ui.onrender.com/chat/send`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        dataset_id: datasetId,
+        sender: "user",
+        message: question
+      })
+    });
 
-useEffect(() => {
+    // then ask AI
+    const res = await fetch(`https://klyra-e6ui.onrender.com/chat/answer`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        dataset_id: datasetId,
+        question: question,
+      })
+    });
+
+    const data = await res.json();
+    console.log("AI reply:", data);
+
+    setQuestion("");
+    loadChat();
+  }
+
+  useEffect(() => {
     loadChat();
   }, []);
-
 
   return (
     <div className="min-h-screen bg-[#070708] text-white px-6 pt-28">
@@ -71,4 +82,4 @@ useEffect(() => {
   );
 }
 
-export default ChatPage
+export default ChatPage;
