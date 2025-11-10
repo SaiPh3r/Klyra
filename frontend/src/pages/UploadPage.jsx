@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 export default function UploadPage() {
   const { user } = useUser();
   const [datasets, setDatasets] = useState([]);
+  const[loadingDatasets , setLoading] = useState(true);
 
   if (!user) return null;
 
@@ -14,6 +15,7 @@ export default function UploadPage() {
     const data = await res.json();
     console.log("datasets loaded", data);
     setDatasets(data.datasets);
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -36,31 +38,34 @@ export default function UploadPage() {
         <UploadDataset userId={user.id} afterUpload={loadDatasets} />
       </div>
 
-      <div className="max-w-xl mx-auto">
-        <h2 className="text-2xl font-semibold mb-4">Your Uploaded Files</h2>
+ <div className="max-w-xl mx-auto">
+  <h2 className="text-2xl font-semibold mb-4">Your Uploaded Files</h2>
 
-        <div className="space-y-3">
-          {datasets.map((d) => (
-            <div
-              key={d._id}
-              className="bg-black/20 border border-white/10 rounded-xl p-4 flex justify-between items-center hover:bg-black/40 transition"
-            >
-              <span>{d.file_name}</span>
-
-              <Link
-                to={`/chat/${d._id}`}
-                className="px-4 py-1 bg-purple-600 rounded-lg text-sm"
-              >
-                Open →
-              </Link>
-            </div>
-          ))}
-
-          {datasets.length === 0 && (
-            <p className="text-gray-500 text-center">No datasets yet</p>
-          )}
+  {loadingDatasets ? (
+    <p className="text-gray-400 text-center">Loading your datasets...</p>
+  ) : (
+    <div className="space-y-3">
+      {datasets.map((d) => (
+        <div
+          key={d._id}
+          className="bg-black/20 border border-white/10 rounded-xl p-4 flex justify-between items-center hover:bg-black/40 transition"
+        >
+          <span>{d.file_name}</span>
+          <Link
+            to={`/chat/${d._id}`}
+            className="px-4 py-1 bg-purple-600 rounded-lg text-sm"
+          >
+            Open →
+          </Link>
         </div>
-      </div>
+      ))}
+
+      {datasets.length === 0 && (
+        <p className="text-gray-500 text-center">No datasets yet</p>
+      )}
+    </div>
+  )}
+</div>
 
     </div>
   );
