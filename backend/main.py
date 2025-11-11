@@ -271,6 +271,7 @@ Rules:
 - do NOT use any knowledge outside dataset.
 - If the dataset rows do not include a direct answer, infer based on column names if possible.
 
+If question is about what dataset contains, summarise it using column names. 
 Give a short precise answer:"""
 
     prompt = PromptTemplate.from_template(template)
