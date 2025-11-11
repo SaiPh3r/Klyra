@@ -173,6 +173,11 @@ def process_dataset(dataset_id:str):
     # drop header
     header = rows[0] 
     rows = rows[1:]
+
+    #header
+    header_text = "SUMMARY of dataset columns: " + ", ".join(header) + ". This describes what this dataset is ABOUT."
+    header_emb = model.embed_documents([header_text])[0]
+
     row_texts = [
     " | ".join([f"{header[i]}={r[i]}" for i in range(len(r))])
     for r in rows
@@ -189,6 +194,13 @@ def process_dataset(dataset_id:str):
 
     # delete old chunks if any
     embeddings_collection.delete_many({"dataset_id": dataset_id})
+
+    embeddings_collection.insert_one({
+    "dataset_id": dataset_id,
+    "text": header_text,
+    "embedding": header_emb
+})
+
 
     # insert many separate docs
     embeddings_collection.insert_many(chunk_docs)
@@ -230,8 +242,8 @@ def answer(data:Ask):
         scored.append((score, c["text"]))
 
     scored.sort(reverse=True)
-    top3 = [s[1] for s in scored[:3]]
-    context = "\n".join(top3)
+    top20 = [s[1] for s in scored[:20]]
+    context = "\n".join(top20)
 
     # 3) get ALL chat history
     chat_doc = chat_collection.find_one({"dataset_id": data.dataset_id})
@@ -256,8 +268,8 @@ QUESTION:
 Rules:
 - your answer MUST come strictly from dataset rows
 - chat history is ONLY to understand the user's intent, NOT to invent data
-- do NOT use any knowledge outside dataset rows
-- if not enough dataset info -> say EXACTLY: "Not enough information in the dataset."
+- do NOT use any knowledge outside dataset.
+- If the dataset rows do not include a direct answer, infer based on column names if possible.
 
 Give a short precise answer:"""
 
