@@ -5,6 +5,7 @@ const ChatPage = () => {
   const { datasetId } = useParams();
   const [messages , setMessages] = useState([]);
   const [question , setQuestion] = useState("");
+  const [loader , setLoader] = useState(false)
 
   async function loadChat() {
     const res = await fetch(`https://klyra-e6ui.onrender.com/chat/${datasetId}`);
@@ -16,6 +17,7 @@ const ChatPage = () => {
 
   async function askQuestion() {
     // store user msg first
+    setLoader(true);
     await fetch(`https://klyra-e6ui.onrender.com/chat/send`, {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
@@ -41,6 +43,7 @@ const ChatPage = () => {
 
     setQuestion("");
     loadChat();
+    setLoader(false);
   }
 
   useEffect(() => {
@@ -71,12 +74,18 @@ const ChatPage = () => {
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="ask something..."
         />
-        <button
-          onClick={askQuestion}
-          className="px-4 py-2 bg-purple-600 rounded-xl"
-        >
-          Send
-        </button>
+<button
+  onClick={askQuestion}
+  className="px-4 py-2 bg-purple-600 rounded-xl flex items-center justify-center min-w-[80px]"
+  disabled={loader}   
+>
+  {loader ? (
+    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+  ) : (
+    "Send"
+  )}
+</button>
+
       </div>
     </div>
   );
