@@ -12,6 +12,8 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings , ChatGoogleGene
 from langchain_core.prompts import PromptTemplate
 
 import csv
+import pandas as pd
+import io
 
 
 app = FastAPI()
@@ -57,6 +59,16 @@ class SendMessage(BaseModel):
 class Ask(BaseModel):
        dataset_id:str
        question:str
+
+class AnalyticsRequest(BaseModel):
+    dataset_id: str
+    csv_url: str
+    x_column: str
+    y_column: str
+    aggregation: str  # sum, avg, count, min, max
+    chart_type: str   # bar, line, scatter, pie
+    title: str = ""
+    color_scheme: str = "viridis"
 
 @app.get("/")
 def home():
@@ -121,6 +133,90 @@ def get_chat(dataset_id:str):
         return {"chat":chat}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/analytics/generate-chart")
+def generate_chart(data: AnalyticsRequest):
+    """
+    Generate chart-ready analytics data from CSV.
+    Accepts column selections, aggregation, and chart type.
+    Returns labels and values for Plotly visualization.
+    """
+    try:
+        # Fetch CSV from URL
+        csv_resp = requests.get(data.csv_url)
+        csv_resp.raise_for_status()
+        
+        # Load into pandas
+        df = pd.read_csv(io.StringIO(csv_resp.text))
+        
+        # Validate columns exist
+        if data.x_column not in df.columns:
+            raise HTTPException(status_code=400, detail=f"Column '{data.x_column}' not found")
+        if data.y_column not in df.columns:
+            raise HTTPException(status_code=400, detail=f"Column '{data.y_column}' not found")
+        
+        # Group by X axis and apply aggregation
+        aggregation_funcs = {
+            "sum": "sum",
+            "avg": "mean",
+            "count": "count",
+            "min": "min",
+            "max": "max"
+        }
+        
+        agg_func = aggregation_funcs.get(data.aggregation, "sum")
+        
+        # Perform groupby aggregation
+        grouped = df.groupby(data.x_column)[data.y_column].agg(agg_func).reset_index()
+        grouped.columns = ["label", "value"]
+        
+        # Convert to JSON-friendly format
+        labels = grouped["label"].astype(str).tolist()
+        values = grouped["value"].astype(float).tolist()
+        
+        return {
+            "success": True,
+            "chart_data": {
+                "labels": labels,
+                "values": values,
+                "title": data.title or f"{data.aggregation.capitalize()} of {data.y_column} by {data.x_column}",
+                "x_axis": data.x_column,
+                "y_axis": data.y_column,
+                "aggregation": data.aggregation,
+                "chart_type": data.chart_type
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating chart: {str(e)}")
+    
+@app.post("/analytics/preview-columns")
+def preview_columns(data: AnalyticsRequest):
+    """
+    Get available columns from CSV for UI dropdown.
+    Returns columns with their data types.
+    """
+    try:
+        csv_resp = requests.get(data.csv_url)
+        csv_resp.raise_for_status()
+        
+        df = pd.read_csv(io.StringIO(csv_resp.text))
+        
+        # Determine column types
+        columns_info = []
+        for col in df.columns:
+            dtype = "numeric" if pd.api.types.is_numeric_dtype(df[col]) else "text"
+            columns_info.append({"name": col, "type": dtype})
+        
+        return {
+            "success": True,
+            "columns": columns_info,
+            "rows": len(df),
+            "sample": df.head(3).values.tolist()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading CSV: {str(e)}")
     
 @app.post("/chat/send")
 def send_message(data:SendMessage):
@@ -252,7 +348,7 @@ def answer(data:Ask):
         history = "\n".join([f"{m['sender']}: {m['message']}" for m in chat_doc["messages"]])
 
     # 4) build prompt
-    template = """You are a data analysis assistant.
+    template = """You are a data analysis assistaldnt.
 
 Use ONLY the dataset rows and chat history below.
 

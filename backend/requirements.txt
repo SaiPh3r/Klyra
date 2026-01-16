@@ -3,6 +3,8 @@ uvicorn
 pymongo[srv]==4.7.3
 python-dotenv
 requests
+pandas
+numpy
 
 langchain>=1.0.0
 langchain-google-genai>=3.0.0

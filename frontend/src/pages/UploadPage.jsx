@@ -51,12 +51,20 @@ export default function UploadPage() {
           className="bg-black/20 border border-white/10 rounded-xl p-4 flex justify-between items-center hover:bg-black/40 transition"
         >
           <span>{d.file_name}</span>
-          <Link
-            to={`/chat/${d._id}`}
-            className="px-4 py-1 bg-purple-600 rounded-lg text-sm"
-          >
-            Open →
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              to={`/chat/${d._id}`}
+              className="px-4 py-1 bg-purple-600 rounded-lg text-sm hover:bg-purple-700 transition"
+            >
+              Chat →
+            </Link>
+            <Link
+              to={`/dashboard/${d._id}`}
+              className="px-4 py-1 bg-blue-600 rounded-lg text-sm hover:bg-blue-700 transition"
+            >
+              Dashboard →
+            </Link>
+          </div>
         </div>
       ))}
 
