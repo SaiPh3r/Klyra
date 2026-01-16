@@ -25,31 +25,23 @@ const DashboardPage = () => {
   const { user } = useUser();
   const API_BASE = "https://klyra-e6ui.onrender.com";
 
-//   const API_BASE = "http://localhost:8000";
-
-
-
-  // State
   const [dataset, setDataset] = useState(null);
-  const [columns, setColumns] = useState([]); // all columns
-  const [numericColumns, setNumericColumns] = useState([]); // only numeric
+  const [columns, setColumns] = useState([]);
+  const [numericColumns, setNumericColumns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [chartData, setChartData] = useState(null);
   const [error, setError] = useState("");
 
-  // Form controls
   const [xAxis, setXAxis] = useState("");
   const [yAxis, setYAxis] = useState("");
   const [aggregation, setAggregation] = useState("sum");
   const [chartType, setChartType] = useState("bar");
   const [chartTitle, setChartTitle] = useState("");
 
-  // Color palette for pie charts
   const COLORS = ["#8b5cf6", "#ec4899", "#06b6d4", "#10b981", "#f59e0b", "#ef4444"];
 
   if (!user) return null;
 
-  // Fetch dataset info and CSV columns on mount
   useEffect(() => {
     loadDatasetColumns();
   }, [user]);
@@ -57,7 +49,6 @@ const DashboardPage = () => {
   async function loadDatasetColumns() {
     try {
       setLoading(true);
-      // Get dataset info from MongoDB
       const datasetRes = await fetch(
         `${API_BASE}/datasets/${user.id}`
       );
@@ -68,8 +59,6 @@ const DashboardPage = () => {
 
       if (currentDataset) {
         setDataset(currentDataset);
-
-        // Get columns from CSV
         const analyticsRes = await fetch(`${API_BASE}/analytics/preview-columns`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -85,7 +74,6 @@ const DashboardPage = () => {
 
         const analyticsData = await analyticsRes.json();
         if (analyticsData.success && analyticsData.columns.length > 0) {
-          // Extract column names and types
           const allCols = analyticsData.columns.map(c => c.name);
           const numericCols = analyticsData.columns
             .filter(c => c.type === "numeric")
@@ -94,9 +82,7 @@ const DashboardPage = () => {
           setColumns(allCols);
           setNumericColumns(numericCols);
           
-          // Auto-select first column for X-axis
           setXAxis(allCols[0]);
-          // Auto-select first numeric column for Y-axis
           if (numericCols.length > 0) {
             setYAxis(numericCols[0]);
           }
@@ -110,7 +96,6 @@ const DashboardPage = () => {
     }
   }
 
-  // Generate chart data
   async function generateChart() {
     if (!xAxis || !yAxis) {
       setError("Please select both X and Y columns");
@@ -151,7 +136,6 @@ const DashboardPage = () => {
     }
   }
 
-  // Convert chart data to recharts format
   function getRechartsData() {
     if (!chartData) return [];
     return chartData.labels.map((label, idx) => ({
@@ -160,7 +144,7 @@ const DashboardPage = () => {
     }));
   }
 
-  // Render appropriate chart
+
   function renderChart() {
     if (!chartData) return null;
 
@@ -263,7 +247,6 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-[#070708] text-white p-6">
-      {/* Header */}
       <div className="mb-8">
         <button
           onClick={() => navigate("/upload")}
@@ -277,13 +260,10 @@ const DashboardPage = () => {
         )}
       </div>
 
-      {/* Main content */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Control Panel */}
         <div className="lg:col-span-1 bg-black/50 border border-white/10 p-6 rounded-xl h-fit">
           <h2 className="text-xl font-semibold mb-4">Configure Chart</h2>
 
-          {/* X Axis */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">X-Axis</label>
             <select
@@ -300,7 +280,6 @@ const DashboardPage = () => {
             </select>
           </div>
 
-          {/* Y Axis */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">Y-Axis (Numeric Only)</label>
             <select
@@ -317,7 +296,6 @@ const DashboardPage = () => {
             </select>
           </div>
 
-          {/* Aggregation */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">
               Aggregation
@@ -335,7 +313,6 @@ const DashboardPage = () => {
             </select>
           </div>
 
-          {/* Chart Type */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">Chart Type</label>
             <select
@@ -350,7 +327,6 @@ const DashboardPage = () => {
             </select>
           </div>
 
-          {/* Chart Title */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">
               Chart Title (optional)
@@ -364,7 +340,6 @@ const DashboardPage = () => {
             />
           </div>
 
-          {/* Generate Button */}
           <button
             onClick={generateChart}
             disabled={loading || !xAxis || !yAxis}
@@ -376,7 +351,6 @@ const DashboardPage = () => {
           {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
         </div>
 
-        {/* Chart Canvas */}
         <div className="lg:col-span-3 bg-black/50 border border-white/10 p-6 rounded-xl">
           {chartData ? (
             <div>
@@ -391,7 +365,6 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Quick Stats */}
       {chartData && (
         <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-black/50 border border-white/10 p-4 rounded">

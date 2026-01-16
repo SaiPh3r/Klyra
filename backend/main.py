@@ -26,8 +26,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# MongoDB setup
 db = client[os.getenv("DB_NAME", "klyra_db")]
 users_collection = db["users"]
 datasets_collection = db["datasets"]
@@ -42,12 +40,12 @@ class User(BaseModel):
 class Dataset(BaseModel):
     user_id : str
     file_name : str
-    file_url : str #url for the file where i will be stroing it 
+    file_url : str 
 
 class Chat(BaseModel):
     user_id: str
     dataset_id: str
-    sender: str           # "user" or "ai"
+    sender: str
     message: str
     timestamp: datetime = datetime.now(UTC)
 
@@ -65,8 +63,8 @@ class AnalyticsRequest(BaseModel):
     csv_url: str
     x_column: str
     y_column: str
-    aggregation: str  # sum, avg, count, min, max
-    chart_type: str   # bar, line, scatter, pie
+    aggregation: str
+    chart_type: str
     title: str = ""
     color_scheme: str = "viridis"
 
@@ -136,26 +134,17 @@ def get_chat(dataset_id:str):
 
 @app.post("/analytics/generate-chart")
 def generate_chart(data: AnalyticsRequest):
-    """
-    Generate chart-ready analytics data from CSV.
-    Accepts column selections, aggregation, and chart type.
-    Returns labels and values for Plotly visualization.
-    """
     try:
-        # Fetch CSV from URL
         csv_resp = requests.get(data.csv_url)
         csv_resp.raise_for_status()
         
-        # Load into pandas
         df = pd.read_csv(io.StringIO(csv_resp.text))
         
-        # Validate columns exist
         if data.x_column not in df.columns:
             raise HTTPException(status_code=400, detail=f"Column '{data.x_column}' not found")
         if data.y_column not in df.columns:
             raise HTTPException(status_code=400, detail=f"Column '{data.y_column}' not found")
         
-        # Group by X axis and apply aggregation
         aggregation_funcs = {
             "sum": "sum",
             "avg": "mean",
@@ -166,11 +155,9 @@ def generate_chart(data: AnalyticsRequest):
         
         agg_func = aggregation_funcs.get(data.aggregation, "sum")
         
-        # Perform groupby aggregation
         grouped = df.groupby(data.x_column)[data.y_column].agg(agg_func).reset_index()
         grouped.columns = ["label", "value"]
         
-        # Convert to JSON-friendly format
         labels = grouped["label"].astype(str).tolist()
         values = grouped["value"].astype(float).tolist()
         
@@ -203,7 +190,6 @@ def preview_columns(data: AnalyticsRequest):
         
         df = pd.read_csv(io.StringIO(csv_resp.text))
         
-        # Determine column types
         columns_info = []
         for col in df.columns:
             dtype = "numeric" if pd.api.types.is_numeric_dtype(df[col]) else "text"
